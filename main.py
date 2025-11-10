@@ -1,6 +1,6 @@
 import pyModeS as pms
 from pathlib import Path
-from __init__ import ADS_B
+from __init__ import ADS_B, LAT_REF, LON_REF
 import subprocess
 from subprocess import Popen
 import re
@@ -8,6 +8,7 @@ import time
 from queue import Queue
 from threading import Thread
 from entities.aircraft import Aircraft
+from collections import deque
 
 AIRCRAFT_ID = range(1, 5)           # TC 1-4
 SURFACE_POSITION = range(5, 9)      # TC 5-8
@@ -40,7 +41,7 @@ def start():
     #producer.join()
     consumer.join()
 
-def filter_msg(msg: str):
+def create_aircraft(msg: str):
     print("Sanitizing: ", msg)
     df = pms.df(msg)
     if df != 17:
@@ -52,25 +53,29 @@ def filter_msg(msg: str):
     icao = pms.adsb.icao(msg)
     tc = pms.adsb.typecode(msg)
 
-    payload = filter_by_type_code(tc)
-    return None
+    payload = filter_by_type_code(msg, tc)
+    return payload # Should be filtered information, probably full aircraft
+    return Aircraft(icao=icao)
 
 def write_db(track: str):
-    print(f"sending...")
-    pass
+    print(f"sending track={track}....")
 
-def consume(q: Queue):
-    for msg in q.get():
-        track = filter_msg(msg)
-        if is_complete(track):
-            write_db(track)
+def consume(tracks: Queue):
+    incomplete_tracks = deque()
+    for track in tracks.get():
+        if is_complete(track): # track.is_complete()
+            write_db(Aircraft(track))
+            incomplete_tracks.remove(track)
+        else:
+            incomplete_tracks.append(track)
 
 def is_complete(track: Aircraft):
-    return False
+    return True
 
 def produce(process: Popen, queue: Queue):
+    # Producerar delar av entiteter
     for raw_data in fetch_adsb_data(process):
-        msg = filter_msg(raw_data)
+        msg = create_aircraft(raw_data)
         queue.put(msg)
 
 def fetch_adsb_data(process: Popen):
@@ -82,17 +87,21 @@ def fetch_adsb_data(process: Popen):
         if out:
             yield out
 
-def filter_by_type_code(msg: str):
+def filter_by_type_code(msg: str, type_code: str) -> tuple[...]:
+    tc = type_code
     match type_code:
         case tc if tc in AIRCRAFT_ID:
+            return pms.adsb.callsign(msg)
             print("HANDLE AIRCRAFT ID")
         case tc if tc in SURFACE_POSITION:
             print("HANDLE SURFACE POSITION")
+            return pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
         case tc if tc in AIRBORNE_POSITION_BARO:
-            print("Fuck")
-            # return pms.adsb.airborne_position(msg)
+            return pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
         case tc if tc in AIRBORNE_VELOCITY:
-            print(f"AIRBORNE: {pms.adsb.airborne_velocity(msg)}")
+            airborne_velocity = pms.adsb.airborne_velocity(msg)
+            print(f"Airborne velocity: {airborne_velocity}")
+            return airborne_velocity
         case tc if tc in AIRBORNE_POSITION_GNSS:
             print("HANDLE AIRBORNE POSITION")
         case tc if tc in AIRCRAFT_STATUS:
