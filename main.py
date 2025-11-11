@@ -9,6 +9,7 @@ from queue import Queue
 from threading import Thread
 from entities.aircraft import Aircraft
 from collections import deque
+import schedule
 
 AIRCRAFT_ID = range(1, 5)           # TC 1-4
 SURFACE_POSITION = range(5, 9)      # TC 5-8
@@ -29,45 +30,43 @@ def start():
     pdb.set_trace()
     q = Queue()
     p = Popen([Path(ADS_B)], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    #adsb_gen = fetch_adsb_data(p)
-    #producer = Thread(target=produce, args=(p, q,))
     consumer = Thread(target=consume, args=(q,))
-    #producer.start()
-    aircraft = Aircraft()
-    produce(p, q)
     consumer.start()
-    #sanitized_data = sanitize_data(d)
-    #Thread(target=send, args=(sanitized_data,), daemon=True).start()
-    #producer.join()
+    produce(p, q)
     consumer.join()
 
 def create_aircraft(msg: str):
-    print("Sanitizing: ", msg)
+    #print("Sanitizing: ", msg)
     df = pms.df(msg)
     if df != 17:
-        print("Not ADSB")
+        #print("Not ADSB")
         return
     if pms.crc(msg) != 0:
+        #print("CRC is not 0")
         return
-
-    icao = pms.adsb.icao(msg)
-    tc = pms.adsb.typecode(msg)
-
-    payload = filter_by_type_code(msg, tc)
-    return payload # Should be filtered information, probably full aircraft
-    return Aircraft(icao=icao)
+    a = _create_aircraft(msg)
+    print(f"Aircraft: {a}")
+    return a
 
 def write_db(track: str):
     print(f"sending track={track}....")
 
 def consume(tracks: Queue):
-    incomplete_tracks = deque()
-    for track in tracks.get():
-        if is_complete(track): # track.is_complete()
-            write_db(Aircraft(track))
-            incomplete_tracks.remove(track)
-        else:
-            incomplete_tracks.append(track)
+    aircrafts = {}
+    while True:
+       # print(list(tracks.queue))
+        if tracks and not tracks.empty() and type(tracks) == type(Queue()):
+            for track in tracks.get():
+                if aircrafts.__contains__(track.icao):
+                    aircrafts[track.icao].update(track)
+                else: 
+                    aircrafts[track.icao] = track
+                schedule.every(5).seconds().do(lambda: write(aircrafts))
+
+def write(aircrafts: dict):
+    for aircraft in aircrafts:
+        write_db(aircraft)
+    aircrafts = {}
 
 def is_complete(track: Aircraft):
     return True
@@ -75,35 +74,36 @@ def is_complete(track: Aircraft):
 def produce(process: Popen, queue: Queue):
     # Producerar delar av entiteter
     for raw_data in fetch_adsb_data(process):
-        msg = create_aircraft(raw_data)
-        queue.put(msg)
+        aircraft = create_aircraft(raw_data)
+        if aircraft:
+            queue.put(aircraft)
 
 def fetch_adsb_data(process: Popen):
     p = process
     while p.poll() is None:
         out = p.stdout.readline().decode("ascii")
-        
         out = re.sub(r'[;*\n\r]', "", out)
-        if out:
+        if out: 
             yield out
 
-def filter_by_type_code(msg: str, type_code: str) -> tuple[...]:
-    tc = type_code
+def _create_aircraft(msg: str) -> Aircraft:
+    icao = pms.adsb.icao(msg)
+    type_code = pms.adsb.typecode(msg)
     match type_code:
         case tc if tc in AIRCRAFT_ID:
-            return pms.adsb.callsign(msg)
-            print("HANDLE AIRCRAFT ID")
+            return Aircraft(icao=icao, callsign=pms.adsb.callsign(msg))
         case tc if tc in SURFACE_POSITION:
-            print("HANDLE SURFACE POSITION")
-            return pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
+            surface_position = pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
+            return Aircraft(icao=icao, position=surface_position)
         case tc if tc in AIRBORNE_POSITION_BARO:
-            return pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
+            airborne_position_baro = pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
+            return Aircraft(icao=icao, position=airborne_position_baro)
         case tc if tc in AIRBORNE_VELOCITY:
             airborne_velocity = pms.adsb.airborne_velocity(msg)
-            print(f"Airborne velocity: {airborne_velocity}")
-            return airborne_velocity
+            return Aircraft(icao=icao, velocity=airborne_velocity)
         case tc if tc in AIRBORNE_POSITION_GNSS:
-            print("HANDLE AIRBORNE POSITION")
+            airborne_position_gnss = pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
+            return Aircraft(icao=icao, position=airborne_position_gnss)
         case tc if tc in AIRCRAFT_STATUS:
             print("HANDLE AIRCRAFT STATUS")
         case tc if tc in TARGET_STATE_STATUS:
