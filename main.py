@@ -45,23 +45,22 @@ def create_aircraft(msg: str):
         #print("CRC is not 0")
         return
     a = _create_aircraft(msg)
-    print(f"Aircraft: {a}")
+   # print(f"Aircraft: {a}")
     return a
 
 def write_db(track: str):
-    print(f"sending track={track}....")
+    print(f"Writing Aircraft: {track}")
 
 def consume(tracks: Queue):
     aircrafts = {}
     while True:
-       # print(list(tracks.queue))
-        if tracks and not tracks.empty() and type(tracks) == type(Queue()):
-            for track in tracks.get():
-                if aircrafts.__contains__(track.icao):
-                    aircrafts[track.icao].update(track)
-                else: 
-                    aircrafts[track.icao] = track
-                schedule.every(5).seconds().do(lambda: write(aircrafts))
+        if tracks and not tracks.empty():
+            track = tracks.get()
+            if aircrafts.__contains__(track.icao):
+                aircrafts[track.icao].update(track)
+            else: 
+                aircrafts[track.icao] = track
+            schedule.every(5).seconds.do(lambda: write(aircrafts))
 
 def write(aircrafts: dict):
     for aircraft in aircrafts:
@@ -85,6 +84,8 @@ def fetch_adsb_data(process: Popen):
         out = re.sub(r'[;*\n\r]', "", out)
         if out: 
             yield out
+        else:
+            print("\rSearching...")
 
 def _create_aircraft(msg: str) -> Aircraft:
     icao = pms.adsb.icao(msg)
@@ -105,14 +106,29 @@ def _create_aircraft(msg: str) -> Aircraft:
             airborne_position_gnss = pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
             return Aircraft(icao=icao, position=airborne_position_gnss)
         case tc if tc in AIRCRAFT_STATUS:
-            print("HANDLE AIRCRAFT STATUS")
+            pass
+            #print("HANDLE AIRCRAFT STATUS")
         case tc if tc in TARGET_STATE_STATUS:
-            print("HANDLE TARGET STATE STATUS")
+            pass
+            #print("HANDLE TARGET STATE STATUS")
         case tc if tc in OPERATIONAL_STATUS:
-            print("HANDLE OPERATIONAL STATUS")
+            pass
+            #print("HANDLE OPERATIONAL STATUS")
         case _:
-            print(f"UNKNOWN TYPE CODE: {type_code}")
+            pass
+            #print(f"UNKNOWN TYPE CODE: {type_code}")
 
 
 if __name__ == "__main__":
     main()
+
+"""
+    Returns:
+        int, float, int, string, [string], [string]:
+            - Speed (kt)
+            - Angle (degree), either ground track or heading
+            - Vertical rate (ft/min)
+            - Speed type ('GS' for ground speed, 'AS' for airspeed)
+            - [Optional] Direction source ('TRUE_NORTH' or 'MAGNETIC_NORTH')
+            - [Optional] Vertical rate source ('BARO' or 'GNSS')
+    """

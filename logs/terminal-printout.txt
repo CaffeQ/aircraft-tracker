@@ -1,0 +1,113 @@
+HANDLE TARGET STATE STATUS
+Aircraft: None
+Aircraft: ICAO: 4ab5d2, POS: None, VEL: None, Callsign: SAS2132_
+Aircraft: ICAO: 4ab5d2, POS: None, VEL: (262, 3.7124609411824308, -768, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: (242, 157.67134362198087, 1920, 'GS'), Callsign: None
+Aircraft: ICAO: 4aab14, POS: None, VEL: (46, 230.1944289077348, -384, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: (59.56059265136719, 17.914947509765625), VEL: None, Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: (250, 144.27586519233108, 2048, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: (59.55560302734375, 17.92401123046875), VEL: None, Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: (257, 129.32075028361507, 2816, 'GS'), Callsign: None
+HANDLE OPERATIONAL STATUS
+Aircraft: None
+HANDLE TARGET STATE STATUS
+Aircraft: None
+Aircraft: ICAO: 4aab14, POS: (59.34983825683594, 18.03350830078125), VEL: None, Callsign: None
+Aircraft: ICAO: 744824, POS: (59.54461669921875, 17.95989990234375), VEL: None, Callsign: None
+Aircraft: ICAO: 4aab14, POS: (59.34965515136719, 18.03314208984375), VEL: None, Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: (264, 100.88552705465874, 2688, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: (59.54315185546875, 17.97601318359375), VEL: None, Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: (265, 95.40960494447339, 2688, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: (59.54305875099311, 17.97827358903556), VEL: None, Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: (266, 91.7226620716228, 2688, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: (59.543060302734375, 17.983428955078125), VEL: None, Callsign: None
+HANDLE OPERATIONAL STATUS
+Aircraft: None
+Aircraft: ICAO: 744824, POS: None, VEL: (266, 89.78460334739293, 2688, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: (266, 88.06216023455889, 2688, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: (267, 83.99099404250548, 2688, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: (59.54352427337129, 17.99323772561961), VEL: None, Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: (267, 80.32664456759652, 2560, 'GS'), Callsign: None
+HANDLE TARGET STATE STATUS
+Aircraft: None
+HANDLE OPERATIONAL STATUS
+Aircraft: None
+Aircraft: ICAO: 744824, POS: (59.54374694824219, 17.99578857421875), VEL: None, Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: (269, 74.9315118405078, 1984, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: (59.54493713378906, 18.0047607421875), VEL: None, Callsign: None
+HANDLE AIRCRAFT STATUS
+Aircraft: None
+Aircraft: ICAO: 744824, POS: None, VEL: (272, 69.56717132060132, 1472, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: (59.5458984375, 18.010001346982758), VEL: None, Callsign: None
+Aircraft: ICAO: 744824, POS: (59.54754638671875, 18.016845703125), VEL: None, Callsign: None
+HANDLE OPERATIONAL STATUS
+Aircraft: None
+Aircraft: ICAO: 744824, POS: (59.54814147949219, 18.01904296875), VEL: None, Callsign: None
+HANDLE TARGET STATE STATUS
+Aircraft: None
+Aircraft: ICAO: 4ab5d2, POS: (59.37940979003906, 18.189239501953125), VEL: None, Callsign: None
+Aircraft: ICAO: 4ab5d2, POS: None, VEL: (240, 14.962155254326548, -704, 'GS'), Callsign: None
+Aircraft: ICAO: 4ab5d2, POS: (59.381561279296875, 18.190338134765625), VEL: None, Callsign: None
+Aircraft: ICAO: 4ab5d2, POS: None, VEL: (240, 15.192409009550273, -768, 'GS'), Callsign: None
+Aircraft: ICAO: 4ab5d2, POS: (59.387946694584215, 18.19373821390086), VEL: None, Callsign: None
+Aircraft: ICAO: 4ab5d2, POS: (59.391082763671875, 18.195465087890625), VEL: None, Callsign: None
+^C
+Program interrupted. (Use 'cont' to resume).
+*** WARNING: file '/home/august/dev/aircraft-tracker/main.py' was edited, running stale code until the program is rerun
+> /home/august/dev/aircraft-tracker/main.py(90)fetch_adsb_data()
+-> def _create_aircraft(msg: str) -> Aircraft:
+(Pdb) ^D
+Traceback (most recent call last):
+  File "/home/august/dev/aircraft-tracker/main.py", line 124, in <module>
+  File "/home/august/dev/aircraft-tracker/main.py", line 26, in main
+    start()
+    ~~~~~^^
+  File "/home/august/dev/aircraft-tracker/main.py", line 35, in start
+    produce(p, q)
+    ~~~~~~~^^^^^^
+  File "/home/august/dev/aircraft-tracker/main.py", line 82, in produce
+    def fetch_adsb_data(process: Popen):
+                        ^^^^^^^^^^^^^^^^
+  File "/home/august/dev/aircraft-tracker/main.py", line 90, in fetch_adsb_data
+    def _create_aircraft(msg: str) -> Aircraft:
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/linuxbrew/.linuxbrew/opt/python@3.13/lib/python3.13/bdb.py", line 116, in trace_dispatch
+    return self.dispatch_opcode(frame, arg)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/home/linuxbrew/.linuxbrew/opt/python@3.13/lib/python3.13/bdb.py", line 216, in dispatch_opcode
+    if self.quitting: raise BdbQuit
+                      ^^^^^^^^^^^^^
+bdb.BdbQuit
+^[[A^[[A^[[B^CTraceback (most recent call last):
+  File "/home/linuxbrew/.linuxbrew/opt/python@3.13/lib/python3.13/threading.py", line 1540, in _shutdown
+    _thread_shutdown()
+KeyboardInterrupt:
+(venv) august@DESKTOP-AM9I45D:~/dev/aircraft-tracker$ python3 main.py
+Starting...
+> /home/august/dev/aircraft-tracker/main.py(30)start()
+-> pdb.set_trace()
+(Pdb) c
+Aircraft: ICAO: 4ab5d2, POS: None, VEL: (236, 24.18361224020978, -896, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: (59.492340087890625, 18.326934814453125), VEL: None, Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: (358, 167.43653060148162, 1664, 'GS'), Callsign: None
+> /home/august/dev/aircraft-tracker/main.py(61)consume()
+-> pdb.set_trace()
+(Pdb) Aircraft: ICAO: 744824, POS: (59.4371337890625, 18.350830078125), VEL: None, Callsign: None
+HANDLE TARGET STATE STATUS
+Aircraft: None
+Aircraft: ICAO: 744824, POS: None, VEL: (363, 167.60797694178837, 1024, 'GS'), Callsign: None
+HANDLE TARGET STATE STATUS
+Aircraft: None
+Aircraft: ICAO: 744824, POS: None, VEL: None, Callsign: RJA144__
+HANDLE OPERATIONAL STATUS
+Aircraft: None
+Aircraft: ICAO: 744824, POS: (59.41502380371094, 18.3603515625), VEL: None, Callsign: None
+HANDLE TARGET STATE STATUS
+Aircraft: None
+HANDLE TARGET STATE STATUS
+Aircraft: None
+HANDLE TARGET STATE STATUS
+Aircraft: None
+Aircraft: ICAO: 744824, POS: None, VEL: (372, 167.60459316624153, 1856, 'GS'), Callsign: None
+Aircraft: ICAO: 744824, POS: None, VEL: None, Callsign: RJA144__
+Aircraft: ICAO: 744824, POS: None, VEL: (373, 167.63750758428571, 1984, 'GS'), Callsign: None
