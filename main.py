@@ -45,7 +45,7 @@ def create_aircraft(msg: str):
         #print("CRC is not 0")
         return
     a = _create_aircraft(msg)
-   # print(f"Aircraft: {a}")
+    print(f"Aircraft: {a}")
     return a
 
 def write_db(track: str):
@@ -53,6 +53,7 @@ def write_db(track: str):
 
 def consume(tracks: Queue):
     aircrafts = {}
+    schedule.every(5).seconds.do(lambda: write(aircrafts))
     while True:
         if tracks and not tracks.empty():
             track = tracks.get()
@@ -60,10 +61,11 @@ def consume(tracks: Queue):
                 aircrafts[track.icao].update(track)
             else: 
                 aircrafts[track.icao] = track
-            schedule.every(5).seconds.do(lambda: write(aircrafts))
+            schedule.run_pending()
 
 def write(aircrafts: dict):
-    for aircraft in aircrafts:
+    for icao, aircraft in aircrafts.items():
+        print(f"writing ICAO: {icao}, aircraft: {aircraft}")
         write_db(aircraft)
     aircrafts = {}
 
@@ -84,8 +86,6 @@ def fetch_adsb_data(process: Popen):
         out = re.sub(r'[;*\n\r]', "", out)
         if out: 
             yield out
-        else:
-            print("\rSearching...")
 
 def _create_aircraft(msg: str) -> Aircraft:
     icao = pms.adsb.icao(msg)
@@ -97,11 +97,11 @@ def _create_aircraft(msg: str) -> Aircraft:
             surface_position = pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
             return Aircraft(icao=icao, position=surface_position)
         case tc if tc in AIRBORNE_POSITION_BARO:
-            airborne_position_baro = pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
-            return Aircraft(icao=icao, position=airborne_position_baro)
+            altitude_ft = pms.adsb.altitude(msg)
+            return Aircraft(icao=icao, altitude_ft=altitude_ft)
         case tc if tc in AIRBORNE_VELOCITY:
-            airborne_velocity = pms.adsb.airborne_velocity(msg)
-            return Aircraft(icao=icao, velocity=airborne_velocity)
+            speed_kt, angle_degrees, vertical_rate, speed_type = pms.adsb.airborne_velocity(msg)
+            return Aircraft(icao=icao, velocity=(speed_kt, angle_degrees, vertical_rate, speed_type))
         case tc if tc in AIRBORNE_POSITION_GNSS:
             airborne_position_gnss = pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
             return Aircraft(icao=icao, position=airborne_position_gnss)
