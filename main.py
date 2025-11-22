@@ -10,6 +10,7 @@ from threading import Thread
 from entities.aircraft import Aircraft
 from collections import deque
 import schedule
+import trackHandling
 
 AIRCRAFT_ID = range(1, 5)           # TC 1-4
 SURFACE_POSITION = range(5, 9)      # TC 5-8
@@ -98,10 +99,10 @@ def _create_aircraft(msg: str) -> Aircraft:
             return Aircraft(icao=icao, position=surface_position)
         case tc if tc in AIRBORNE_POSITION_BARO:
             altitude_ft = pms.adsb.altitude(msg)
-            return Aircraft(icao=icao, altitude_ft=altitude_ft)
+            lat, lon = pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
+            return Aircraft(icao=icao, altitude_ft=altitude_ft, position=(lat, lon))
         case tc if tc in AIRBORNE_VELOCITY:
-            speed_kt, angle_degrees, vertical_rate, speed_type = pms.adsb.airborne_velocity(msg)
-            return Aircraft(icao=icao, velocity=(speed_kt, angle_degrees, vertical_rate, speed_type))
+            return trackHandling.get_airborne_velocity(icao, msg)
         case tc if tc in AIRBORNE_POSITION_GNSS:
             airborne_position_gnss = pms.adsb.position_with_ref(msg, LAT_REF, LON_REF)
             return Aircraft(icao=icao, position=airborne_position_gnss)

@@ -1,4 +1,5 @@
 from time import time
+from datetime import datetime
 from dataclasses import dataclass
 
 class Aircraft: # Det som ska skickas till databasen, med eller utan allt
@@ -10,29 +11,36 @@ class Aircraft: # Det som ska skickas till databasen, med eller utan allt
 
         self.icao = icao
 
+        self.speed_kt = None
+        self.angle_degrees = None
+        self.vertical_rate = None
+        self.speed_type = None 
+
+        self.latitude = None
+        self.longitude = None
+        self.altitude_ft = None
+        self.callsign = None
+
         if velocity:
             speed_kt, angle_degrees, vertical_rate, speed_type = velocity 
             self.speed_kt = speed_kt
             self.angle_degrees = angle_degrees
             self.vertical_rate = vertical_rate
             self.speed_type = speed_type 
-        else:
-            self.speed_kt = None
-            self.angle_degrees = None
-            self.vertical_rate = None
-            self.speed_type = None 
+
         if position:
             latitude, longitude = position
             self.latitude = latitude
             self.longitude = longitude
-        else:
-            self.latitude = None
-            self.longitude = None
 
-        self.altitude_ft = altitude_ft
-        self.callsign = callsign
-        self.time_stamp = time()
-        self.latest_update = time()
+        if altitude_ft:
+            self.altitude_ft = altitude_ft
+
+        if callsign:
+            self.callsign = callsign
+
+        self.detected = datetime.now()
+        self.latest_update = datetime.now()
 
     def update(self, aircraft: "Aircraft"):
         print("Updating...")
@@ -47,7 +55,11 @@ class Aircraft: # Det som ska skickas till databasen, med eller utan allt
         self.latest_update = aircraft.latest_update
 
     def __str__(self):
-        return f"ICAO: {self.icao}, POS: {self.position}, VEL: {self.velocity}, Callsign: {self.callsign}, Latest update: {self.latest_update}"
+        return f"ICAO: {self.icao}, POS: {self.position}, VEL: {self.velocity}, Callsign: {self.callsign}, Latest update: {self.latest_update}, Detected: {self.detected}"
+
+    @property
+    def json(self):
+        pass
 
     @property
     def velocity(self):
@@ -59,10 +71,13 @@ class Aircraft: # Det som ska skickas till databasen, med eller utan allt
 
     @property
     def position(self):
-        return self.latitude, self.longitude
+        return self.latitude, self.longitude, self.altitude_ft
 
     def set_position(self, position: tuple):
-        self.latitude, self.longitude = position
+        self.latitude, self.longitude, self.altitude_ft = position
+
+    def set_altitude(self, altitude_ft: int):
+        self.altitude_ft = altitude_ft
 
 @dataclass
 class Track: # Aggregerad men inte fullständigt komplett data
