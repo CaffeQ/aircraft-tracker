@@ -11,6 +11,8 @@ from entities.aircraft import Aircraft
 from collections import deque
 import schedule
 import trackHandling
+from db import *
+import sys
 
 AIRCRAFT_ID = range(1, 5)           # TC 1-4
 SURFACE_POSITION = range(5, 9)      # TC 5-8
@@ -22,6 +24,9 @@ AIRCRAFT_STATUS = range(28, 29)     # TC 28
 TARGET_STATE_STATUS = range(29, 30) # TC 29
 OPERATIONAL_STATUS = range(31, 32)  # TC 31
 
+
+db_handler = DBHandler()
+
 def main():
     print("Starting...")
     start()
@@ -30,11 +35,30 @@ def start():
     import pdb
     pdb.set_trace()
     q = Queue()
-    p = Popen([Path(ADS_B)], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    consumer = Thread(target=consume, args=(q,))
-    consumer.start()
-    produce(p, q)
-    consumer.join()
+    track_producer = Popen([Path(ADS_B)], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+    track_consumer = Thread(target=consume, args=(q,))
+    track_consumer.start()
+
+    track_reader = Popen([Path(ADS_B)], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+    produce(track_producer, q)
+
+    while True:
+        test_read_db()
+    q.put(None)
+    track_consumer.join()
+
+def read_db():
+    sys.stdout.write(f"\r{db_handler.get_all_tracks()}")
+    sys.stdout.flush()
+    time.sleep(0.1) 
+
+def test_read_db():
+    sys.stdout.write(f"\r1423DB 54.3 13.2 500 kt")
+    sys.stdout.flush() 
+    time.sleep(0.1) 
+
 
 def create_aircraft(msg: str):
     #print("Sanitizing: ", msg)
@@ -58,6 +82,8 @@ def consume(tracks: Queue):
     while True:
         if tracks and not tracks.empty():
             track = tracks.get()
+            if not track:
+                break
             if aircrafts.__contains__(track.icao):
                 aircrafts[track.icao].update(track)
             else: 
