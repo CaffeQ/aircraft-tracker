@@ -5,7 +5,7 @@ import subprocess
 from subprocess import Popen
 import re
 import time
-from queue import Queue
+from queue import Queue, Empty
 from threading import Thread
 from entities.aircraft import Aircraft
 from collections import deque
@@ -24,6 +24,8 @@ AIRCRAFT_STATUS = range(28, 29)     # TC 28
 TARGET_STATE_STATUS = range(29, 30) # TC 29
 OPERATIONAL_STATUS = range(31, 32)  # TC 31
 
+MAX_TIMEOUT = 1_000_000
+
 
 db_handler = DBHandler()
 
@@ -32,24 +34,21 @@ def main():
     start()
 
 def start():
-    import pdb
-    pdb.set_trace()
     q = Queue()
     track_producer = Popen([Path(ADS_B)], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    track_consumer = Thread(target=consume, args=(q,))
+    track_consumer = Thread(target=consume, args=(q,10))
+    track_reader = Thread(target=read_db)
     track_consumer.start()
-
-    track_reader = Popen([Path(ADS_B)], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-
+    track_reader.start()
 
     produce(track_producer, q)
 
-    while True:
-        test_read_db()
     q.put(None)
-    track_consumer.join()
+    #track_consumer.join()
+   # track_reader.join()
 
 def read_db():
+   # while True:
     sys.stdout.write(f"\r{db_handler.get_all_tracks()}")
     sys.stdout.flush()
     time.sleep(0.1) 
@@ -61,29 +60,36 @@ def test_read_db():
 
 
 def create_aircraft(msg: str):
-    #print("Sanitizing: ", msg)
     df = pms.df(msg)
     if df != 17:
-        #print("Not ADSB")
         return
     if pms.crc(msg) != 0:
-        #print("CRC is not 0")
         return
     a = _create_aircraft(msg)
-    print(f"Aircraft: {a}")
+    #print(f"Aircraft: {a}")
     return a
 
 def write_db(track: str):
-    print(f"Writing Aircraft: {track}")
+    try:
+        db_handler.write_track(track)
+    except RuntimeError:
+        #print("Track was none, did not write to database")
+        pass 
 
-def consume(tracks: Queue):
+def consume(tracks: Queue, timeout: int = 10):
     aircrafts = {}
     schedule.every(5).seconds.do(lambda: write(aircrafts))
-    while True:
+   # track = Aircraft("ADSAD")
+    import pdb
+    pdb.set_trace()
+    start_time = time.time()
+    while time.time() - start_time < MAX_TIMEOUT:
+        try:
+            track = tracks.get(timeout=timeout)
+        except Empty:
+            print("Consuming timed out")
+            break
         if tracks and not tracks.empty():
-            track = tracks.get()
-            if not track:
-                break
             if aircrafts.__contains__(track.icao):
                 aircrafts[track.icao].update(track)
             else: 

@@ -12,20 +12,18 @@ class DBHandler:
     TRACK_TABLE = """CREATE TABLE track(icao, latitude, longitude, altitude_ft, speed_kt, angle_degrees, vertical_rate, speed_type, latest_update, callsign)"""
 
     def __init__(self):
-        self.con = sqlite3.connect("tracks.db")
+        self.con = sqlite3.connect("tracks.db", check_same_thread=False)
         self.cursor = self.con.cursor()
         try:
             self.cursor = self.cursor.execute(self.TRACK_TABLE)
         except sqlite3.OperationalError:
             pass
-
-
         
 
 
     def write_track(self, track: Aircraft):
-        print("Writing track")
-
+        if not track:
+            raise RuntimeError("No track provided")
         insert = f"'{track.icao}', {track.latitude}, {track.longitude}, {track.altitude_ft}, {track.speed_kt}, {track.angle_degrees}, {track.vertical_rate}, '{track.speed_type}', '{track.latest_update}', '{track.callsign}'"
         exe = f"INSERT INTO track VALUES ({insert})"
         self.cursor.execute(exe)

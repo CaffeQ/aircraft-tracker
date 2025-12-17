@@ -9,75 +9,120 @@ class Aircraft: # Det som ska skickas till databasen, med eller utan allt
         if not icao:
             raise RuntimeError("No ICAO provided")
 
-        self.icao = icao
+        self._icao = icao
 
-        self.speed_kt = None
-        self.angle_degrees = None
-        self.vertical_rate = None
-        self.speed_type = None 
-
-        self.latitude = None
-        self.longitude = None
-        self.altitude_ft = None
-        self.callsign = None
+        self._speed_kt = None
+        self._angle_degrees = None
+        self._vertical_rate = None
+        self._speed_type = None 
+        self._latitude = None
+        self._longitude = None
+        self._altitude_ft = None
+        self._callsign = None
 
         if velocity:
             speed_kt, angle_degrees, vertical_rate, speed_type = velocity 
-            self.speed_kt = speed_kt
-            self.angle_degrees = angle_degrees
-            self.vertical_rate = vertical_rate
-            self.speed_type = speed_type 
+            self._speed_kt = speed_kt
+            self._angle_degrees = angle_degrees
+            self._vertical_rate = vertical_rate
+            self._speed_type = speed_type 
 
         if position:
             latitude, longitude = position
-            self.latitude = latitude
-            self.longitude = longitude
+            self._latitude = latitude
+            self._longitude = longitude
 
         if altitude_ft:
-            self.altitude_ft = altitude_ft
+            self._altitude_ft = altitude_ft
 
         if callsign:
-            self.callsign = callsign
+            self._callsign = callsign
 
-        self.detected = datetime.now()
-        self.latest_update = datetime.now()
+        self._detected = datetime.now()
+        self._latest_update = datetime.now()
 
     def update(self, aircraft: "Aircraft"):
-        print("Updating...")
         if aircraft.position:
             self.set_position(aircraft.position)
         if aircraft.velocity:
             self.set_velocity(aircraft.velocity)
         if aircraft.callsign:
-            self.callsign = aircraft.callsign
+            self._callsign = aircraft.callsign
         if aircraft.altitude_ft:
-            self.altitude_ft = aircraft.altitude_ft
-        self.latest_update = aircraft.latest_update
+            self._altitude_ft = aircraft.altitude_ft
+        self._latest_update = aircraft.latest_update
 
     def __str__(self):
-        return f"ICAO: {self.icao}, POS: {self.position}, VEL: {self.velocity}, Callsign: {self.callsign}, Latest update: {self.latest_update}, Detected: {self.detected}"
+        return f"ICAO: {self._icao}, POS: {self.position}, VEL: {self.velocity}, Callsign: {self._callsign}, Latest update: {self._latest_update}, Detected: {self._detected}"
 
     @property
     def json(self):
         pass
 
     @property
+    def icao(self):
+        if not self._icao:
+            return "Empty"
+        return self._icao
+    
+    @property
+    def latitude(self):
+        return self._value_or_empty(self._latitude)
+    
+    @property
+    def longitude(self):
+        return self._value_or_empty(self._longitude)
+    
+    @property
+    def altitude_ft(self):
+        return self._value_or_empty(self._altitude_ft)
+
+    @property
+    def speed_kt(self):
+        return self._value_or_empty(self._speed_kt)
+
+    @property
+    def angle_degrees(self):
+        return self._value_or_empty(self._angle_degrees)
+    
+    @property
+    def vertical_rate(self):
+        return self._value_or_empty(self._vertical_rate)
+
+    @property
+    def speed_type(self):
+        return self._value_or_empty(self._speed_type)
+
+    @property
+    def latest_update(self):
+        return self._value_or_empty(self._latest_update)
+
+    @property
+    def callsign(self):
+        return self._value_or_empty(self._callsign)
+
+    def _value_or_empty(self, value):
+        return "Empty" if value is None else value
+
+   #  f"'{track.icao}', {track.latitude}, {track.longitude}, {track.altitude_ft}, {track.speed_kt}, {track.angle_degrees}, {track.vertical_rate}, '{track.speed_type}', '{track.latest_update}', '{track.callsign}'"
+
+    @property
     def velocity(self):
-        return self.speed_kt, self.angle_degrees, self.vertical_rate, self.speed_type
+        return self._speed_kt, self._angle_degrees, self._vertical_rate, self._speed_type
  
 
     def set_velocity(self, velocity: tuple):
-        self.speed_kt, self.angle_degrees, self.vertical_rate, self.speed_type = velocity
+        self._speed_kt, self._angle_degrees, self._vertical_rate, self._speed_type = velocity
 
     @property
     def position(self):
-        return self.latitude, self.longitude, self.altitude_ft
+        return self._latitude, self._longitude, self._altitude_ft
 
     def set_position(self, position: tuple):
-        self.latitude, self.longitude, self.altitude_ft = position
+        self._latitude, self._longitude, self._altitude_ft = position
 
     def set_altitude(self, altitude_ft: int):
-        self.altitude_ft = altitude_ft
+        self._altitude_ft = altitude_ft
 
 @dataclass
 class Track: # Aggregerad men inte fullständigt komplett data
