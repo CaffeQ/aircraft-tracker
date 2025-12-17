@@ -64,45 +64,50 @@ class Aircraft: # Det som ska skickas till databasen, med eller utan allt
         if not self._icao:
             return "Empty"
         return self._icao
-    
+# f"'{track.icao}', {track.latitude}, {track.longitude}, {track.altitude_ft}, {track.speed_kt}, {track.angle_degrees}, {track.vertical_rate}, '{track.speed_type}', '{track.latest_update}', '{track.callsign}'"
     @property
     def latitude(self):
-        return self._value_or_empty(self._latitude)
+        return self._value_or_empty(self._latitude, float)
     
     @property
     def longitude(self):
-        return self._value_or_empty(self._longitude)
+        return self._value_or_empty(self._longitude, float)
     
     @property
     def altitude_ft(self):
-        return self._value_or_empty(self._altitude_ft)
+        return self._value_or_empty(self._altitude_ft, float)
 
     @property
     def speed_kt(self):
-        return self._value_or_empty(self._speed_kt)
+        return self._value_or_empty(self._speed_kt, float)
 
     @property
     def angle_degrees(self):
-        return self._value_or_empty(self._angle_degrees)
+        return self._value_or_empty(self._angle_degrees, float)
     
     @property
     def vertical_rate(self):
-        return self._value_or_empty(self._vertical_rate)
+        return self._value_or_empty(self._vertical_rate, float)
 
     @property
     def speed_type(self):
-        return self._value_or_empty(self._speed_type)
+        return self._value_or_empty(self._speed_type, float)
 
     @property
     def latest_update(self):
-        return self._value_or_empty(self._latest_update)
+        return self._value_or_empty(self._latest_update, str)
 
     @property
     def callsign(self):
-        return self._value_or_empty(self._callsign)
+        return self._value_or_empty(self._callsign, str)
 
-    def _value_or_empty(self, value):
-        return "Empty" if value is None else value
+    def _value_or_empty(self, value, type_: type = str):
+        if type_ == str:
+            return "Empty" if value is None else value
+        elif type_ == float:
+            return 0.0 if value is None else value
+        elif type_ == int:
+            return 0 if value is None else value
 
    #  f"'{track.icao}', {track.latitude}, {track.longitude}, {track.altitude_ft}, {track.speed_kt}, {track.angle_degrees}, {track.vertical_rate}, '{track.speed_type}', '{track.latest_update}', '{track.callsign}'"
 

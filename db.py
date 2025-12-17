@@ -24,6 +24,7 @@ class DBHandler:
     def write_track(self, track: Aircraft):
         if not track:
             raise RuntimeError("No track provided")
+        print("WRITING")
         insert = f"'{track.icao}', {track.latitude}, {track.longitude}, {track.altitude_ft}, {track.speed_kt}, {track.angle_degrees}, {track.vertical_rate}, '{track.speed_type}', '{track.latest_update}', '{track.callsign}'"
         exe = f"INSERT INTO track VALUES ({insert})"
         self.cursor.execute(exe)

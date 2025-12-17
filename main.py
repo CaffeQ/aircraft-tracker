@@ -5,7 +5,7 @@ import subprocess
 from subprocess import Popen
 import re
 import time
-from queue import Queue, Empty
+import queue
 from threading import Thread
 from entities.aircraft import Aircraft
 from collections import deque
@@ -29,14 +29,16 @@ MAX_TIMEOUT = 1_000_000
 
 db_handler = DBHandler()
 
+ACTIVE = True
+
 def main():
     print("Starting...")
     start()
 
 def start():
-    q = Queue()
+    q = queue.Queue()
     track_producer = Popen([Path(ADS_B)], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-    track_consumer = Thread(target=consume, args=(q,10))
+    track_consumer = Thread(target=consume, args=(q,))
     track_reader = Thread(target=read_db)
     track_consumer.start()
     track_reader.start()
@@ -48,10 +50,16 @@ def start():
    # track_reader.join()
 
 def read_db():
-   # while True:
-    sys.stdout.write(f"\r{db_handler.get_all_tracks()}")
-    sys.stdout.flush()
-    time.sleep(0.1) 
+    import pdb
+    pdb.set_trace()
+    start_time = time.time()
+    TIMEOUT = 15
+    while time.time() - start_time < TIMEOUT:
+        tracks = db_handler.get_all_tracks()
+        if tracks:
+            sys.stdout.write(f"\r{db_handler.get_all_tracks()}")
+            sys.stdout.flush()
+        time.sleep(0.1) 
 
 def test_read_db():
     sys.stdout.write(f"\r1423DB 54.3 13.2 500 kt")
@@ -66,34 +74,34 @@ def create_aircraft(msg: str):
     if pms.crc(msg) != 0:
         return
     a = _create_aircraft(msg)
-    #print(f"Aircraft: {a}")
+    # print(f"Aircraft: {a}")/
     return a
 
 def write_db(track: str):
     try:
         db_handler.write_track(track)
     except RuntimeError:
-        #print("Track was none, did not write to database")
+        print("Track was none, did not write to database")
         pass 
 
-def consume(tracks: Queue, timeout: int = 10):
+def consume(tracks: queue.Queue, timeout: int = 20):
     aircrafts = {}
     schedule.every(5).seconds.do(lambda: write(aircrafts))
-   # track = Aircraft("ADSAD")
-    import pdb
-    pdb.set_trace()
     start_time = time.time()
+    track = None
+
     while time.time() - start_time < MAX_TIMEOUT:
         try:
             track = tracks.get(timeout=timeout)
-        except Empty:
-            print("Consuming timed out")
+        except queue.Empty:
+            print("Consumer thread timed out")
             break
         if tracks and not tracks.empty():
-            if aircrafts.__contains__(track.icao):
-                aircrafts[track.icao].update(track)
-            else: 
-                aircrafts[track.icao] = track
+            if track:
+                if aircrafts.__contains__(track.icao):
+                    aircrafts[track.icao].update(track)
+                else: 
+                    aircrafts[track.icao] = track
             schedule.run_pending()
 
 def write(aircrafts: dict):
@@ -105,12 +113,12 @@ def write(aircrafts: dict):
 def is_complete(track: Aircraft):
     return True
 
-def produce(process: Popen, queue: Queue):
+def produce(process: Popen, track_queue: queue.Queue):
     # Producerar delar av entiteter
     for raw_data in fetch_adsb_data(process):
         aircraft = create_aircraft(raw_data)
         if aircraft:
-            queue.put(aircraft)
+            track_queue.put(aircraft)
 
 def fetch_adsb_data(process: Popen):
     p = process
